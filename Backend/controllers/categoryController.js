@@ -1,27 +1,39 @@
-const Category = require("../models/Category");
+import Category from "../models/Category.js";
 
-exports.getCategories = async (req, res) => {
-  const categories = await Category.find({ company: req.user.company });
-  res.json(categories);
+export const getCategories = async (req, res) => {
+  try {
+    const categories = await Category.find({ company: req.user.company });
+    res.status(200).json(categories);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };
 
-exports.createCategory = async (req, res) => {
-  const { name, description } = req.body;
-  const category = new Category({
-    name,
-    description,
-    company: req.user.company,
-  });
-  await category.save();
-  res.json(category);
+export const createCategory = async (req, res) => {
+  try {
+    const { name, description } = req.body;
+    const category = new Category({
+      name,
+      description,
+      company: req.user.company,
+    });
+    await category.save();
+    res.status(201).json(category);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };
 
-exports.updateCategory = async (req, res) => {
-  const { name, description, active } = req.body;
-  const category = await Category.findByIdAndUpdate(
-    req.params.id,
-    { name, description, active },
-    { new: true }
-  );
-  res.json(category);
+export const updateCategory = async (req, res) => {
+  try {
+    const { name, description, active } = req.body;
+    const category = await Category.findByIdAndUpdate(
+      req.params.id,
+      { name, description, active },
+      { new: true }
+    );
+    res.status(200).json(category);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };
