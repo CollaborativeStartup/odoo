@@ -13,6 +13,11 @@ import SetRules from "./Pages/Admin/SetRules";
 import ManagerLayout from "./Pages/Manager/ManagerLayout";
 import ManagerDashboard from "./Pages/Manager/ManagerDashboard";
 
+//employee pages
+import EmpLayout from "./Pages/Employee/EmpLayout";
+import EmpDashboard from "./Pages/Employee/EmpDashboard";
+import ForgotPswd from "./Pages/Auth/ForgotPswd";
+
 function App() {
   return (
     <Router>
@@ -20,7 +25,7 @@ function App() {
         {/* Auth Routes */}
         <Route path="/" element={<Login />} />
         <Route path="/signup" element={<SignUp />} />
-
+        <Route path="/forgotpassword" element={<ForgotPswd />} />
         {/* Admin Routes */}
         <Route path="/admin" element={<Layout />}>
           <Route index element={<Dashboard />} />
@@ -29,7 +34,11 @@ function App() {
         </Route>
         <Route path="/manager" element={<ManagerLayout />}>
           <Route index element={<ManagerDashboard />} />
-          <Route path="dashboard" element={<Dashboard />} />
+          <Route path="dashboard" element={<ManagerDashboard />} />
+        </Route>
+        <Route path="/employee" element={<EmpLayout />}>
+          <Route index element={<EmpDashboard />} />
+          <Route path="dashboard" element={<EmpDashboard />} />
         </Route>
       </Routes>
     </Router>

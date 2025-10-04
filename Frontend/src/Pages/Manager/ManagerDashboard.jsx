@@ -80,7 +80,7 @@ export default function ManagerView() {
     <div className="p-6 max-w-7xl mx-auto bg-gray-50 min-h-screen">
       <h1 className="text-2xl font-bold mb-6">Manager's View</h1>
 
-      <div className="bg-white border-2 border-gray-800 rounded-lg p-4">
+      <div className="bg-white border-2 border-gray-800 rounded-lg p-4 overflow-y-hidden">
         <h2 className="text-lg font-semibold mb-4">Approvals to review</h2>
 
         <div className="bg-blue-50 border border-blue-200 rounded p-3 mb-4">
@@ -92,9 +92,85 @@ export default function ManagerView() {
           </p>
         </div>
 
-        <div className="overflow-x-auto">
+        {/*   <div className="overflow-x-auto ">
           <table className="w-full">
             <thead>
+              <tr className="border-b-2 border-gray-800">
+                <th className="text-left p-2 font-semibold">
+                  Approval Subject
+                </th>
+                <th className="text-left p-2 font-semibold">Request Owner</th>
+                <th className="text-left p-2 font-semibold">Category</th>
+                <th className="text-left p-2 font-semibold">Request Status</th>
+                <th className="text-left p-2 font-semibold">
+                  Total amount
+                  <br />
+                  <span className="text-xs font-normal text-gray-500">
+                    (in company's currency)
+                  </span>
+                </th>
+                <th className="text-left p-2 font-semibold">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {approvals.map((approval) => (
+                <tr
+                  key={approval.id}
+                  className={`border-b border-gray-300 ${
+                    approval.status !== "Pending" ? "bg-gray-50 opacity-60" : ""
+                  }`}
+                >
+                  <td className="p-2">{approval.subject}</td>
+                  <td className="p-2">{approval.requestOwner}</td>
+                  <td className="p-2">{approval.category}</td>
+                  <td className="p-2">
+                    <span
+                      className={`font-semibold ${getStatusColor(
+                        approval.status
+                      )}`}
+                    >
+                      {approval.status}
+                    </span>
+                  </td>
+                  <td className="p-2">
+                    <div className="flex flex-col">
+                      <span className="text-xs text-red-600">
+                        {approval.originalAmount} {approval.originalCurrency}{" "}
+                        (in {approval.originalCurrency})
+                      </span>
+                      <span className="font-medium">
+                        = {approval.convertedAmount} {approval.companyCurrency}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="p-2">
+                    {approval.status === "Pending" && (
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleApprove(approval.id)}
+                          className="px-3 py-1 bg-white border-2 border-green-600 text-green-600 rounded hover:bg-green-50 text-sm font-medium flex items-center gap-1"
+                        >
+                          <CheckCircle size={14} />
+                          Approve
+                        </button>
+                        <button
+                          onClick={() => handleReject(approval.id)}
+                          className="px-3 py-1 bg-white border-2 border-red-600 text-red-600 rounded hover:bg-red-50 text-sm font-medium flex items-center gap-1"
+                        >
+                          <XCircle size={14} />
+                          Reject
+                        </button>
+                      </div>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div> */}
+        <div className="overflow-x-auto max-h-80 overflow-y-auto rounded border">
+          <table className="w-full border-collapse">
+            <thead className="sticky top-0 bg-gray-100 z-10">
               <tr className="border-b-2 border-gray-800">
                 <th className="text-left p-2 font-semibold">
                   Approval Subject
