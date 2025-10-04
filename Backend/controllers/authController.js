@@ -1,29 +1,36 @@
 import User from "../models/User.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-
+import Company from "../models/Company.js";
 export const signup = async (req, res) => {
   try {
-    const { company, name, email, password, role, manager } = req.body;
+    const { companyName, country, currency, name, email, password, role } = req.body;
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
     }
 
-    const salt = await bcrypt.genSalt(10);
-    const passwordHash = await bcrypt.hash(password, salt);
+    let company = await Company.findOne({ name: companyName });
+    if (!company) {
+      company = new Company({
+        name: companyName,
+        country: country,
+        baseCurrency: currency,
+      });
+      await company.save();
+    }
 
     const user = new User({
-      company,
+      company: company._id,
       name,
       email,
-      passwordHash,
-      role,
-      manager,
+      passwordHash: password,
+      role: role || "admin",
+      manager: null,
     });
 
-    await user.save();
+    await user.save(); 
 
     const token = jwt.sign(
       { id: user._id, role: user.role },
@@ -39,6 +46,7 @@ export const signup = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        company: company._id,
       },
     });
   } catch (error) {
