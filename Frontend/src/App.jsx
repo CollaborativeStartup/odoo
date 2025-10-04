@@ -9,6 +9,9 @@ import Layout from "./Pages/Admin/Layout";
 import Dashboard from "./Pages/Admin/Dashboard";
 import SetRules from "./Pages/Admin/SetRules";
 
+//manager pages
+import ManagerLayout from "./Pages/Manager/ManagerLayout";
+import ManagerDashboard from "./Pages/Manager/ManagerDashboard";
 
 function App() {
   return (
@@ -24,10 +27,10 @@ function App() {
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="set-rules" element={<SetRules />} />
         </Route>
-
-
-
-   
+        <Route path="/manager" element={<ManagerLayout />}>
+          <Route index element={<ManagerDashboard />} />
+          <Route path="dashboard" element={<Dashboard />} />
+        </Route>
       </Routes>
     </Router>
   );
