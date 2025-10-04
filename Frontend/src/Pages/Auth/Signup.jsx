@@ -2,8 +2,12 @@ import React, { useState, useEffect } from "react";
 import { Eye, EyeOff, ChevronDown, Search, DollarSign } from "lucide-react";
 import { setCredentials } from "../../redux/authSlice";
 import { BASE_URL } from "../../config/urlconfig";
+import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
 
 const SignUp = () => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [countries, setCountries] = useState([]);
   const [formData, setFormData] = useState({
     company: "",
@@ -25,21 +29,111 @@ const SignUp = () => {
   const [submitting, setSubmitting] = useState(false);
 
   const fallbackCountries = [
-    { name: "United States", code: "US", currency: "USD", currencyName: "United States Dollar", currencySymbol: "$" },
-    { name: "United Kingdom", code: "GB", currency: "GBP", currencyName: "British Pound", currencySymbol: "£" },
-    { name: "India", code: "IN", currency: "INR", currencyName: "Indian Rupee", currencySymbol: "₹" },
-    { name: "Canada", code: "CA", currency: "CAD", currencyName: "Canadian Dollar", currencySymbol: "$" },
-    { name: "Australia", code: "AU", currency: "AUD", currencyName: "Australian Dollar", currencySymbol: "$" },
-    { name: "Germany", code: "DE", currency: "EUR", currencyName: "Euro", currencySymbol: "€" },
-    { name: "France", code: "FR", currency: "EUR", currencyName: "Euro", currencySymbol: "€" },
-    { name: "Japan", code: "JP", currency: "JPY", currencyName: "Japanese Yen", currencySymbol: "¥" },
-    { name: "China", code: "CN", currency: "CNY", currencyName: "Chinese Yuan", currencySymbol: "¥" },
-    { name: "Brazil", code: "BR", currency: "BRL", currencyName: "Brazilian Real", currencySymbol: "R$" },
-    { name: "Mexico", code: "MX", currency: "MXN", currencyName: "Mexican Peso", currencySymbol: "$" },
-    { name: "South Africa", code: "ZA", currency: "ZAR", currencyName: "South African Rand", currencySymbol: "R" },
-    { name: "Singapore", code: "SG", currency: "SGD", currencyName: "Singapore Dollar", currencySymbol: "$" },
-    { name: "United Arab Emirates", code: "AE", currency: "AED", currencyName: "UAE Dirham", currencySymbol: "د.إ" },
-    { name: "Switzerland", code: "CH", currency: "CHF", currencyName: "Swiss Franc", currencySymbol: "Fr" },
+    {
+      name: "United States",
+      code: "US",
+      currency: "USD",
+      currencyName: "United States Dollar",
+      currencySymbol: "$",
+    },
+    {
+      name: "United Kingdom",
+      code: "GB",
+      currency: "GBP",
+      currencyName: "British Pound",
+      currencySymbol: "£",
+    },
+    {
+      name: "India",
+      code: "IN",
+      currency: "INR",
+      currencyName: "Indian Rupee",
+      currencySymbol: "₹",
+    },
+    {
+      name: "Canada",
+      code: "CA",
+      currency: "CAD",
+      currencyName: "Canadian Dollar",
+      currencySymbol: "$",
+    },
+    {
+      name: "Australia",
+      code: "AU",
+      currency: "AUD",
+      currencyName: "Australian Dollar",
+      currencySymbol: "$",
+    },
+    {
+      name: "Germany",
+      code: "DE",
+      currency: "EUR",
+      currencyName: "Euro",
+      currencySymbol: "€",
+    },
+    {
+      name: "France",
+      code: "FR",
+      currency: "EUR",
+      currencyName: "Euro",
+      currencySymbol: "€",
+    },
+    {
+      name: "Japan",
+      code: "JP",
+      currency: "JPY",
+      currencyName: "Japanese Yen",
+      currencySymbol: "¥",
+    },
+    {
+      name: "China",
+      code: "CN",
+      currency: "CNY",
+      currencyName: "Chinese Yuan",
+      currencySymbol: "¥",
+    },
+    {
+      name: "Brazil",
+      code: "BR",
+      currency: "BRL",
+      currencyName: "Brazilian Real",
+      currencySymbol: "R$",
+    },
+    {
+      name: "Mexico",
+      code: "MX",
+      currency: "MXN",
+      currencyName: "Mexican Peso",
+      currencySymbol: "$",
+    },
+    {
+      name: "South Africa",
+      code: "ZA",
+      currency: "ZAR",
+      currencyName: "South African Rand",
+      currencySymbol: "R",
+    },
+    {
+      name: "Singapore",
+      code: "SG",
+      currency: "SGD",
+      currencyName: "Singapore Dollar",
+      currencySymbol: "$",
+    },
+    {
+      name: "United Arab Emirates",
+      code: "AE",
+      currency: "AED",
+      currencyName: "UAE Dirham",
+      currencySymbol: "د.إ",
+    },
+    {
+      name: "Switzerland",
+      code: "CH",
+      currency: "CHF",
+      currencyName: "Swiss Franc",
+      currencySymbol: "Fr",
+    },
   ];
 
   useEffect(() => {
@@ -52,29 +146,29 @@ const SignUp = () => {
       const timeoutId = setTimeout(() => controller.abort(), 5000);
 
       const response = await fetch("https://restcountries.com/v2/all", {
-        signal: controller.signal
+        signal: controller.signal,
       });
-      
+
       clearTimeout(timeoutId);
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const data = await response.json();
-      
+
       if (!Array.isArray(data)) {
         setCountries(fallbackCountries);
         setFilteredCountries(fallbackCountries);
         setLoading(false);
         return;
       }
-      
+
       const formatted = data
         .map((country) => {
           const currencies = country.currencies || [];
           const currency = currencies[0] || {};
-          
+
           return {
             name: country.name,
             code: country.alpha2Code,
@@ -85,7 +179,7 @@ const SignUp = () => {
         })
         .filter((country) => country.currency !== "N/A")
         .sort((a, b) => a.name.localeCompare(b.name));
-      
+
       setCountries(formatted);
       setFilteredCountries(formatted);
       setLoading(false);
@@ -128,7 +222,8 @@ const SignUp = () => {
     e.preventDefault();
     const newErrors = {};
 
-    if (!formData.company.trim()) newErrors.company = "Company name is required";
+    if (!formData.company.trim())
+      newErrors.company = "Company name is required";
     if (!formData.name.trim()) newErrors.name = "Name is required";
     if (!formData.email.trim()) {
       newErrors.email = "Email is required";
@@ -156,37 +251,56 @@ const SignUp = () => {
     setErrors({});
 
     try {
+      const selectedCountry = countries.find(
+        (c) => c.name === formData.country
+      );
+
+      const payload = {
+        companyName: formData.company,
+        country: formData.country,
+        currency: selectedCountry.currency,
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        role: formData.role,
+      };
+
+      console.log("Sending signup request with payload:", payload);
+
       const response = await fetch(`${BASE_URL}/auth/signup`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          company: formData.company,
-          name: formData.name,
-          email: formData.email,
-          password: formData.password,
-          role: formData.role,
-        }),
+        body: JSON.stringify(payload),
       });
 
       const data = await response.json();
+      console.log("Server response:", data);
+
+      dispatch(
+        setCredentials({
+          user: data.user,
+          token: data.token,
+        })
+      );
+
+      navigate("/admin/dashboard");
 
       if (!response.ok) {
         throw new Error(data.message || "Signup failed");
       }
 
-      // Dispatch to Redux store (assuming you're using useDispatch hook in your actual app)
-      // dispatch(setCredentials({ user: data.user, token: data.token }));
+      alert(
+        `Account created successfully! Default currency: ${selectedCountry.currency}`
+      );
 
-      const selectedCountry = countries.find((c) => c.name === formData.country);
-      alert(`Account created successfully! Default currency: ${selectedCountry.currency}`);
-      
-      // In your actual app, navigate to dashboard using useNavigate()
       console.log("Signup successful:", data);
     } catch (error) {
       console.error("Signup error:", error);
-      setErrors({ submit: error.message || "Failed to create account. Please try again." });
+      setErrors({
+        submit: error.message || "Failed to create account. Please try again.",
+      });
     } finally {
       setSubmitting(false);
     }
@@ -200,11 +314,17 @@ const SignUp = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-100 via-pink-50 to-blue-100 flex items-center justify-end p-4 bg-cover bg-center" style={{ backgroundImage: 'url(https://d1ss4nmhr4m5he.cloudfront.net/wp-content/uploads/sites/3/2024/10/27141427/What-are-Business-Expenses.jpg)' }}>
-      <div className="w-full max-w-[450px] mr-8 md:mr-16 lg:mr-24">
-        <div className="border-4 border-black rounded-3xl p-8 bg-black">
+    <div
+      className="min-h-screen bg-gradient-to-br from-purple-100 via-pink-50 to-blue-100 flex items-center justify-end p-4 bg-cover bg-center"
+      style={{
+        backgroundImage:
+          "url(https://d1ss4nmhr4m5he.cloudfront.net/wp-content/uploads/sites/3/2024/10/27141427/What-are-Business-Expenses.jpg)",
+      }}
+    >
+       <div className="w-full max-w-[500px] mr-8 md:mr-16 lg:mr-24">
+        <div className="border-4 border-black rounded-3xl p-6 bg-black">
           <div className="text-center mb-8">
-            <div className="flex items-center justify-center gap-2 mb-2">
+            <div className="flex items-center justify-center gap-2 mb-1">
               <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
                 <DollarSign className="w-6 h-6 text-white" strokeWidth={3} />
               </div>
@@ -410,7 +530,14 @@ const SignUp = () => {
               )}
               {formData.country && (
                 <p className="text-gray-300 text-xs mt-2">
-                  Default currency: {countries.find((c) => c.name === formData.country)?.currency} ({countries.find((c) => c.name === formData.country)?.currencyName})
+                  Default currency:{" "}
+                  {countries.find((c) => c.name === formData.country)?.currency}{" "}
+                  (
+                  {
+                    countries.find((c) => c.name === formData.country)
+                      ?.currencyName
+                  }
+                  )
                 </p>
               )}
             </div>
@@ -429,7 +556,10 @@ const SignUp = () => {
           <div className="mt-8 text-center">
             <p className="text-white text-sm">
               Already have an account?{" "}
-              <a href="#" className="font-semibold underline hover:text-gray-300 transition">
+              <a
+                href="/"
+                className="font-semibold underline hover:text-gray-300 transition"
+              >
                 Login
               </a>
             </p>

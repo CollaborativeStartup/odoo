@@ -70,9 +70,7 @@ const Login = () => {
       }
       
     } catch (error) {
-      // Handle different error scenarios
       if (error.response) {
-        // Server responded with error
         const status = error.response.status;
         const message = error.response.data.message;
         
@@ -84,12 +82,10 @@ const Login = () => {
           setErrors({ general: message || "Login failed" });
         }
       } else if (error.request) {
-        // Request made but no response
         setErrors({ 
           general: "Network error. Please check your connection." 
         });
       } else {
-        // Something else happened
         setErrors({ 
           general: "An unexpected error occurred. Please try again." 
         });
