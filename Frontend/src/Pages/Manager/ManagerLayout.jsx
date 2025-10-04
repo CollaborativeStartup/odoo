@@ -4,7 +4,7 @@ import { Link, Outlet, useLocation } from "react-router-dom";
 import { Menu, X, LayoutDashboard } from "lucide-react";
 import MobileSidebar from "./MobileSidebar";
 const menuItems = [
-  { label: "Dashboard", icon: <LayoutDashboard />, path: "/dashboard" },
+  { label: "Dashboard", icon: <LayoutDashboard />, path: "/manager" },
 ];
 
 export default function ManagerLayout() {
