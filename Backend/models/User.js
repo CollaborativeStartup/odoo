@@ -1,4 +1,6 @@
 import mongoose from "mongoose";
+import bcrypt from "bcryptjs";
+
 const UserSchema = new mongoose.Schema({
   company: {
     type: mongoose.Schema.Types.ObjectId,
@@ -17,5 +19,16 @@ const UserSchema = new mongoose.Schema({
   status: { type: String, enum: ["active", "inactive"], default: "active" },
   createdAt: { type: Date, default: Date.now },
 });
+
+UserSchema.pre("save", async function (next) {
+  if (!this.isModified("passwordHash")) return next(); // Skip if password not modified
+  const salt = await bcrypt.genSalt(10);
+  this.passwordHash = await bcrypt.hash(this.passwordHash, salt);
+  next();
+});
+
+UserSchema.methods.comparePassword = async function (enteredPassword) {
+  return await bcrypt.compare(enteredPassword, this.passwordHash);
+};
 
 export default mongoose.model("User", UserSchema);
