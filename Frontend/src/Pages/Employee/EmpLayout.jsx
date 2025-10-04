@@ -2,7 +2,7 @@ import React from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 
 import { Menu, X, LayoutDashboard } from "lucide-react";
-import MobileSidebar from "./MobileSidebar";
+import MobileSidebar from "./EmpMobileSidebar";
 const menuItems = [
   { label: "Dashboard", icon: <LayoutDashboard />, path: "/admin" },
   
