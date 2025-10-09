@@ -4,9 +4,7 @@ import { getCompany, updateCompany } from "../controllers/companyController.js";
 
 const router = express.Router();
 
-router.use(authMiddleware);
-
-router.get("/", getCompany);
-router.patch("/", updateCompany);
+router.get("/getcompany", authMiddleware, getCompany);
+router.put("/update/:id", authMiddleware, updateCompany);
 
 export default router;

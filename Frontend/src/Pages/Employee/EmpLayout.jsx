@@ -1,10 +1,15 @@
 import React from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 
-import { Menu, X, LayoutDashboard } from "lucide-react";
+import { Menu, X, LayoutDashboard, Lock } from "lucide-react";
 import MobileSidebar from "./EmpMobileSidebar";
 const menuItems = [
   { label: "Dashboard", icon: <LayoutDashboard />, path: "/employee" },
+  {
+    label: "Change Password",
+    icon: <Lock />,
+    path: "/employee/change-password",
+  },
 ];
 
 export default function Layout() {

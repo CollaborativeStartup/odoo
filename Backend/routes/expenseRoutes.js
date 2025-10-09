@@ -8,10 +8,8 @@ import {
 
 const router = express.Router();
 
-router.use(authMiddleware);
-
-router.get("/", getExpenses);
-router.post("/", createExpense);
-router.patch("/:id/status", updateExpenseStatus);
+router.get("/getallexpense", authMiddleware, getExpenses);
+router.post("/create", authMiddleware, createExpense);
+router.patch("/:id/status", authMiddleware, updateExpenseStatus);
 
 export default router;

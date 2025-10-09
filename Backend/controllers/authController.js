@@ -4,7 +4,8 @@ import jwt from "jsonwebtoken";
 import Company from "../models/Company.js";
 export const signup = async (req, res) => {
   try {
-    const { companyName, country, currency, name, email, password, role } = req.body;
+    const { companyName, country, currency, name, email, password, role } =
+      req.body;
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -21,16 +22,18 @@ export const signup = async (req, res) => {
       await company.save();
     }
 
+    const passwordHash = await bcrypt.hash(password, 10);
+
     const user = new User({
       company: company._id,
       name,
       email,
-      passwordHash: password,
+      passwordHash: passwordHash,
       role: role || "admin",
       manager: null,
     });
 
-    await user.save(); 
+    await user.save();
 
     const token = jwt.sign(
       { id: user._id, role: user.role },
@@ -144,6 +147,81 @@ export const getUserProfile = async (req, res) => {
     });
   } catch (error) {
     console.error("Get User Error:", error.message);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+import { sendPasswordEmail } from "../utils/emailService.js";
+import crypto from "crypto";
+
+export const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // Generate new random password
+    const newPassword = Math.random().toString(36).slice(-8);
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+
+    // Update user password
+    user.passwordHash = passwordHash;
+    await user.save();
+
+    // Send new password via email
+    await sendPasswordEmail(user.email, newPassword);
+
+    res.status(200).json({ message: "New password sent to your email" });
+  } catch (error) {
+    console.error("Forgot Password Error:", error.message);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const resetPassword = async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+
+    const user = await User.findOne({
+      resetToken: token,
+      resetTokenExpiry: { $gt: Date.now() },
+    });
+    if (!user)
+      return res.status(400).json({ message: "Invalid or expired token" });
+
+    user.passwordHash = await bcrypt.hash(newPassword, 10);
+    user.resetToken = undefined;
+    user.resetTokenExpiry = undefined;
+    await user.save();
+
+    res.json({ message: "Password updated successfully" });
+  } catch (error) {
+    console.error("Reset Password Error:", error.message);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const changePassword = async (req, res) => {
+  try {
+    const { oldPassword, newPassword } = req.body;
+
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const isMatch = await bcrypt.compare(oldPassword, user.passwordHash);
+    if (!isMatch) {
+      return res.status(401).json({ message: "Old password is incorrect" });
+    }
+
+    user.passwordHash = await bcrypt.hash(newPassword, 10);
+    await user.save();
+
+    res.json({ message: "Password changed successfully" });
+  } catch (error) {
+    console.error("Change Password Error:", error.message);
     res.status(500).json({ message: "Server error" });
   }
 };

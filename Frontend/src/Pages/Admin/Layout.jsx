@@ -1,24 +1,22 @@
 import React from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 
-import { Menu, X, LayoutDashboard } from "lucide-react";
+import { Menu, X, LayoutDashboard, Lock } from "lucide-react";
 import MobileSidebar from "./MobileSidebar";
 const menuItems = [
   { label: "Dashboard", icon: <LayoutDashboard />, path: "/admin" },
-  
+  { label: "Change Password", icon: <Lock />, path: "/admin/change-password" },
 ];
 
 export default function Layout() {
   const location = useLocation();
   const showSidebar = location.pathname !== "/";
 
-
   return (
     <>
       <MobileSidebar />
 
       <div className="h-screen bg-black p-5 pl-0 hidden md:block">
-
         <div className={`flex h-full bg-black rounded-2xl overflow-hidden`}>
           {showSidebar && (
             <aside className="w-70 bg-black text-white flex flex-col ">

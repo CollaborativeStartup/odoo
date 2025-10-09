@@ -34,11 +34,13 @@ export const createExpense = async (req, res) => {
       receiptUrl,
       dateIncurred,
       status: "pending",
+      currentApprovalStep: 0,
     });
 
     await expense.save();
     res.status(201).json(expense);
   } catch (error) {
+    console.error("Create Expense Error:", error.message);
     res.status(500).json({ message: error.message });
   }
 };
@@ -51,8 +53,10 @@ export const updateExpenseStatus = async (req, res) => {
       { status, currentApprovalStep },
       { new: true }
     );
+    if (!expense) return res.status(404).json({ message: "Expense not found" });
     res.status(200).json(expense);
   } catch (error) {
+    console.error("Update Expense Error:", error.message);
     res.status(500).json({ message: error.message });
   }
 };

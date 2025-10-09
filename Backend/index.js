@@ -8,6 +8,7 @@ import connectDB from "./db/db.js";
 dotenv.config();
 
 import authRoutes from "./routes/authRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
 import companyRoutes from "./routes/companyRoutes.js";
 import expenseRoutes from "./routes/expenseRoutes.js";
 import categoryRoutes from "./routes/categoryRoutes.js";
@@ -30,15 +31,16 @@ app.get("/", (req, res) => {
   res.send("Welcome to Expense Manager server");
 });
 
-app.use("/api/auth", authRoutes);
-app.use("/api/company", companyRoutes);
-app.use("/api/expenses", expenseRoutes);
-app.use("/api/categories", categoryRoutes);
-app.use("/api/approval-rules", approvalRuleRoutes);
-app.use("/api/approval-actions", approvalActionRoutes);
-app.use("/api/auditlogs", auditLogRoutes);
-const PORT = process.env.PORT || 5000;
+app.use("/auth", authRoutes);
+app.use("/company", companyRoutes);
+app.use("/users", userRoutes);
+app.use("/expenses", expenseRoutes);
+app.use("/categories", categoryRoutes);
+app.use("/approvalrules", approvalRuleRoutes);
+app.use("/approvalactions", approvalActionRoutes);
+app.use("/auditlogs", auditLogRoutes);
+const PORT = process.env.PORT || 5001;
 
 app.listen(PORT, () => {
-  console.log("Server is running on port 5000");
+  console.log(`Server is running on port ${PORT}`);
 });
