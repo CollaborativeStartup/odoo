@@ -24,9 +24,10 @@ const ExpenseSchema = new mongoose.Schema({
   status: {
     type: String,
     enum: ["draft", "pending", "approved", "rejected"],
-    default: "pending",
+    default: "draft",
   },
   currentApprovalStep: { type: Number, default: 0 },
+  approvalSequence: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   createdAt: { type: Date, default: Date.now },
 });
 

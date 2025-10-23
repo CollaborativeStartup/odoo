@@ -1,15 +1,39 @@
-import React from "react";
-import { Link, Outlet, useLocation } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 
-import { Menu, X, LayoutDashboard } from "lucide-react";
+import { Menu, X, LayoutDashboard, Lock, LogOut } from "lucide-react";
 import MobileSidebar from "./EmpMobileSidebar";
+import { getProfile, logout } from "../../services/authApi";
 const menuItems = [
   { label: "Dashboard", icon: <LayoutDashboard />, path: "/employee" },
+  {
+    label: "Change Password",
+    icon: <Lock />,
+    path: "/employee/change-password",
+  },
 ];
 
 export default function Layout() {
   const location = useLocation();
   const showSidebar = location.pathname !== "/";
+
+  const [userName, setUserName] = useState("Samantha");
+  const [userEmail, setUserEmail] = useState("user@example.com");
+
+  useEffect(() => {
+    async function fetchProfile() {
+      try {
+        const profile = await getProfile();
+        if (profile && profile.user) {
+          setUserName(profile.user.name);
+          setUserEmail(profile.user.email);
+        }
+      } catch (error) {
+        console.error("Failed to fetch profile", error);
+      }
+    }
+    fetchProfile();
+  }, []);
 
   return (
     <>
@@ -20,8 +44,8 @@ export default function Layout() {
           {showSidebar && (
             <aside className="w-70 bg-black text-white flex flex-col ">
               <div className="p-6 text-center border-b border-gray-700">
-                <h2 className="text-sm font-semibold">Samantha</h2>
-                <p className="text-xs text-gray-400">+91 789746548</p>
+                <h2 className="text-sm font-semibold">{userName}</h2>
+                <p className="text-xs text-gray-400">{userEmail}</p>
               </div>
 
               <nav className="flex-1 overflow-y-auto p-5  ">
@@ -50,6 +74,19 @@ export default function Layout() {
                   </Link>
                 ))}
               </nav>
+
+              <div className="p-5 border-t border-gray-700">
+                <button
+                  onClick={() => {
+                    logout();
+                    window.location.href = "/";
+                  }}
+                  className="flex items-center gap-3 px-4 py-2 w-full text-left text-white hover:bg-gray-800 rounded-lg transition-all"
+                >
+                  <LogOut className="text-lg" />
+                  <span className="text-sm">Logout</span>
+                </button>
+              </div>
             </aside>
           )}
 

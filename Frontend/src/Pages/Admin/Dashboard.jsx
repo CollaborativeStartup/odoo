@@ -1,30 +1,101 @@
-import React, { useState } from 'react';
-import { Plus, Send, X, Pencil } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from "react";
+import { Plus, Send, X, Pencil } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import {
+  fetchUsers,
+  createUser,
+  updateUser,
+  sendPassword as sendPasswordApi,
+} from "../../services/adminApi";
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const [users, setUsers] = useState([
-    { id: 1, name: 'marc', role: 'Manager', manager: 'sarah', email: 'marc@gmail.com' }
-  ]);
+  const [users, setUsers] = useState([]);
   const [showNewUser, setShowNewUser] = useState(false);
-  const [newUser, setNewUser] = useState({ name: '', role: 'Employee', manager: '', email: '' });
+  const [newUser, setNewUser] = useState({
+    name: "",
+    role: "Employee",
+    manager: "",
+    email: "",
+  });
 
-  const addUser = () => {
-    if (newUser.name && newUser.email) {
-      setUsers([...users, { ...newUser, id: users.length + 1 }]);
-      setNewUser({ name: '', role: 'Employee', manager: '', email: '' });
+  useEffect(() => {
+    async function loadUsers() {
+      try {
+        const data = await fetchUsers();
+        setUsers(data);
+      } catch (e) {
+        // silently fail
+      }
+    }
+    loadUsers();
+  }, []);
+
+  const addUser = async () => {
+    if (!newUser.name || !newUser.email) return;
+    try {
+      const payload = {
+        name: newUser.name,
+        email: newUser.email,
+        role:
+          newUser.role?.toLowerCase() === "manager" ? "manager" : "employee",
+        password: Math.random().toString(36).slice(-8),
+      };
+
+      // Only send manager if it's a valid MongoDB ObjectId
+      const managerValue = (newUser.manager || "").trim();
+      const isValidObjectId = /^[a-f\d]{24}$/i.test(managerValue);
+      if (isValidObjectId) {
+        payload.manager = managerValue;
+      }
+
+      const created = await createUser(payload);
+      setUsers((prev) => [...prev, created]);
+      setNewUser({ name: "", role: "Employee", manager: "", email: "" });
       setShowNewUser(false);
+    } catch (e) {
+      // silently fail
     }
   };
 
-  const sendPassword = (user) => {
-    alert(`Password sent to ${user.email}`);
+  const sendPassword = async (user) => {
+    try {
+      await sendPasswordApi(user._id || user.id);
+      alert(`Password sent to ${user.email}`);
+    } catch (error) {
+      alert("Failed to send password");
+    }
   };
 
   const handleSetRules = (user) => {
     // You can pass user data through state if needed
-    navigate('/admin/set-rules', { state: { user } });
+    navigate("/admin/set-rules", { state: { user } });
+  };
+
+  const handleRoleUpdate = async (userId, newRole) => {
+    try {
+      await updateUser(userId, { role: newRole });
+      setUsers((prev) =>
+        prev.map((u) =>
+          (u._id || u.id) === userId ? { ...u, role: newRole } : u
+        )
+      );
+    } catch (e) {
+      console.error("Failed to update role", e);
+    }
+  };
+
+  const handleManagerUpdate = async (userId, managerId) => {
+    try {
+      await updateUser(userId, { manager: managerId || null });
+      setUsers((prev) =>
+        prev.map((u) =>
+          (u._id || u.id) === userId ? { ...u, manager: managerId } : u
+        )
+      );
+    } catch (e) {
+      console.error("Failed to update manager", e);
+    }
   };
 
   return (
@@ -53,22 +124,47 @@ const Dashboard = () => {
             </thead>
             <tbody>
               {users.map((user) => (
-                <tr key={user.id} className="border-b border-gray-300">
+                <tr
+                  key={user._id || user.id}
+                  className="border-b border-gray-300"
+                >
                   <td className="p-2">{user.name}</td>
                   <td className="p-2">
-                    <select className="border border-gray-300 rounded px-2 py-1" value={user.role}>
-                      <option>Manager</option>
-                      <option>Employee</option>
+                    <select
+                      className="border border-gray-300 rounded px-2 py-1"
+                      value={user.role}
+                      onChange={(e) =>
+                        handleRoleUpdate(user._id || user.id, e.target.value)
+                      }
+                    >
+                      <option value="admin">Admin</option>
+                      <option value="manager">Manager</option>
+                      <option value="employee">Employee</option>
                     </select>
                   </td>
                   <td className="p-2">
-                    <select className="border border-gray-300 rounded px-2 py-1" value={user.manager}>
-                      <option>{user.manager}</option>
+                    <select
+                      className="border border-gray-300 rounded px-2 py-1"
+                      value={user.manager?._id || user.manager || ""}
+                      onChange={(e) =>
+                        handleManagerUpdate(user._id || user.id, e.target.value)
+                      }
+                    >
+                      <option value="">No Manager</option>
+                      {users
+                        .filter(
+                          (u) => u.role === "manager" || u.role === "admin"
+                        )
+                        .map((m) => (
+                          <option key={m._id || m.id} value={m._id || m.id}>
+                            {m.name}
+                          </option>
+                        ))}
                     </select>
                   </td>
                   <td className="p-2">{user.email}</td>
                   <td className="p-2">
-                    <button 
+                    <button
                       onClick={() => handleSetRules(user)}
                       className="hover:bg-gray-100 p-1 rounded cursor-pointer"
                       aria-label="Set rules"
@@ -87,21 +183,28 @@ const Dashboard = () => {
                 </tr>
               ))}
               {showNewUser && (
-                <tr className="border-b border-gray-300 bg-gray-50">
+                <tr
+                  key="new-user"
+                  className="border-b border-gray-300 bg-gray-50"
+                >
                   <td className="p-2">
                     <input
                       type="text"
                       placeholder="Name"
                       className="border border-gray-300 rounded px-2 py-1 w-full"
                       value={newUser.name}
-                      onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
+                      onChange={(e) =>
+                        setNewUser({ ...newUser, name: e.target.value })
+                      }
                     />
                   </td>
                   <td className="p-2">
                     <select
                       className="border border-gray-300 rounded px-2 py-1 w-full"
                       value={newUser.role}
-                      onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
+                      onChange={(e) =>
+                        setNewUser({ ...newUser, role: e.target.value })
+                      }
                     >
                       <option>Manager</option>
                       <option>Employee</option>
@@ -113,7 +216,9 @@ const Dashboard = () => {
                       placeholder="Manager"
                       className="border border-gray-300 rounded px-2 py-1 w-full"
                       value={newUser.manager}
-                      onChange={(e) => setNewUser({ ...newUser, manager: e.target.value })}
+                      onChange={(e) =>
+                        setNewUser({ ...newUser, manager: e.target.value })
+                      }
                     />
                   </td>
                   <td className="p-2">
@@ -122,7 +227,9 @@ const Dashboard = () => {
                       placeholder="Email"
                       className="border border-gray-300 rounded px-2 py-1 w-full"
                       value={newUser.email}
-                      onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+                      onChange={(e) =>
+                        setNewUser({ ...newUser, email: e.target.value })
+                      }
                     />
                   </td>
                   <td className="p-2 flex gap-2">

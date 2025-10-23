@@ -12,6 +12,7 @@ const ApprovalRuleSchema = new mongoose.Schema({
   minimumPercentApproval: { type: Number },
   specificApproverIds: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   isManagerFirst: { type: Boolean, default: false },
+  isSequential: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now },
 });
 

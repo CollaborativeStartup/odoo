@@ -1,75 +1,58 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { CheckCircle, XCircle } from "lucide-react";
+import {
+  getPendingExpenses,
+  approveExpense,
+  rejectExpense,
+} from "../../services/managerApi";
 
 export default function ManagerView() {
-  const [approvals, setApprovals] = useState([
-    {
-      id: 1,
-      subject: "none",
-      requestOwner: "Sarah",
-      category: "Food",
-      status: "Pending",
-      originalAmount: 567,
-      originalCurrency: "INR",
-      convertedAmount: 49896,
-      companyCurrency: "USD",
-    },
-    {
-      id: 2,
-      subject: "Client Dinner",
-      requestOwner: "John",
-      category: "Food",
-      status: "Pending",
-      originalAmount: 15000,
-      originalCurrency: "INR",
-      convertedAmount: 180,
-      companyCurrency: "USD",
-    },
-    {
-      id: 3,
-      subject: "Travel Reimbursement",
-      requestOwner: "Mike",
-      category: "Travel",
-      status: "Pending",
-      originalAmount: 25000,
-      originalCurrency: "INR",
-      convertedAmount: 300,
-      companyCurrency: "USD",
-    },
-    {
-      id: 4,
-      subject: "Office Supplies",
-      requestOwner: "Emma",
-      category: "Supplies",
-      status: "Pending",
-      originalAmount: 5000,
-      originalCurrency: "INR",
-      convertedAmount: 60,
-      companyCurrency: "USD",
-    },
-  ]);
+  const [approvals, setApprovals] = useState([]);
 
-  const handleApprove = (id) => {
-    setApprovals(
-      approvals.map((approval) =>
-        approval.id === id ? { ...approval, status: "Approved" } : approval
-      )
-    );
+  useEffect(() => {
+    async function fetchPendingExpenses() {
+      try {
+        const data = await getPendingExpenses();
+        console.log("Pending Expenses:", data);
+        setApprovals(data);
+      } catch (error) {
+        console.error("Failed to fetch pending expenses", error);
+      }
+    }
+    fetchPendingExpenses();
+  }, []);
+
+  const handleApprove = async (id) => {
+    try {
+      await approveExpense(id);
+      setApprovals(
+        approvals.map((approval) =>
+          approval._id === id ? { ...approval, status: "approved" } : approval
+        )
+      );
+    } catch (error) {
+      console.error("Failed to approve expense", error);
+    }
   };
 
-  const handleReject = (id) => {
-    setApprovals(
-      approvals.map((approval) =>
-        approval.id === id ? { ...approval, status: "Rejected" } : approval
-      )
-    );
+  const handleReject = async (id) => {
+    try {
+      await rejectExpense(id);
+      setApprovals(
+        approvals.map((approval) =>
+          approval._id === id ? { ...approval, status: "rejected" } : approval
+        )
+      );
+    } catch (error) {
+      console.error("Failed to reject expense", error);
+    }
   };
 
   const getStatusColor = (status) => {
     switch (status) {
-      case "Approved":
+      case "approved":
         return "text-green-600";
-      case "Rejected":
+      case "rejected":
         return "text-red-600";
       default:
         return "text-yellow-600";
@@ -115,14 +98,14 @@ export default function ManagerView() {
             <tbody>
               {approvals.map((approval) => (
                 <tr
-                  key={approval.id}
+                  key={approval._id}
                   className={`border-b border-gray-300 ${
-                    approval.status !== "Pending" ? "bg-gray-50 opacity-60" : ""
+                    approval.status !== "pending" ? "bg-gray-50 opacity-60" : ""
                   }`}
                 >
-                  <td className="p-2">{approval.subject}</td>
-                  <td className="p-2">{approval.requestOwner}</td>
-                  <td className="p-2">{approval.category}</td>
+                  <td className="p-2">{approval.description}</td>
+                  <td className="p-2">{approval.employee?.name}</td>
+                  <td className="p-2">{approval.category?.name}</td>
                   <td className="p-2">
                     <span
                       className={`font-semibold ${getStatusColor(
@@ -135,26 +118,26 @@ export default function ManagerView() {
                   <td className="p-2">
                     <div className="flex flex-col">
                       <span className="text-xs text-red-600">
-                        {approval.originalAmount} {approval.originalCurrency}{" "}
-                        (in {approval.originalCurrency})
+                        {approval.amountOriginal} {approval.currencyOriginal}{" "}
+                        (in {approval.currencyOriginal})
                       </span>
                       <span className="font-medium">
-                        = {approval.convertedAmount} {approval.companyCurrency}
+                        = {approval.amountConverted} USD
                       </span>
                     </div>
                   </td>
                   <td className="p-2">
-                    {approval.status === "Pending" && (
+                    {approval.status === "pending" && (
                       <div className="flex gap-2">
                         <button
-                          onClick={() => handleApprove(approval.id)}
+                          onClick={() => handleApprove(approval._id)}
                           className="px-3 py-1 bg-white border-2 border-green-600 text-green-600 rounded hover:bg-green-50 text-sm font-medium flex items-center gap-1"
                         >
                           <CheckCircle size={14} />
                           Approve
                         </button>
                         <button
-                          onClick={() => handleReject(approval.id)}
+                          onClick={() => handleReject(approval._id)}
                           className="px-3 py-1 bg-white border-2 border-red-600 text-red-600 rounded hover:bg-red-50 text-sm font-medium flex items-center gap-1"
                         >
                           <XCircle size={14} />
@@ -191,14 +174,14 @@ export default function ManagerView() {
             <tbody>
               {approvals.map((approval) => (
                 <tr
-                  key={approval.id}
+                  key={approval._id}
                   className={`border-b border-gray-300 ${
-                    approval.status !== "Pending" ? "bg-gray-50 opacity-60" : ""
+                    approval.status !== "pending" ? "bg-gray-50 opacity-60" : ""
                   }`}
                 >
-                  <td className="p-2">{approval.subject}</td>
-                  <td className="p-2">{approval.requestOwner}</td>
-                  <td className="p-2">{approval.category}</td>
+                  <td className="p-2">{approval.description}</td>
+                  <td className="p-2">{approval.employee?.name}</td>
+                  <td className="p-2">{approval.category?.name}</td>
                   <td className="p-2">
                     <span
                       className={`font-semibold ${getStatusColor(
@@ -211,26 +194,26 @@ export default function ManagerView() {
                   <td className="p-2">
                     <div className="flex flex-col">
                       <span className="text-xs text-red-600">
-                        {approval.originalAmount} {approval.originalCurrency}{" "}
-                        (in {approval.originalCurrency})
+                        {approval.amountOriginal} {approval.currencyOriginal}{" "}
+                        (in {approval.currencyOriginal})
                       </span>
                       <span className="font-medium">
-                        = {approval.convertedAmount} {approval.companyCurrency}
+                        = {approval.amountConverted} USD
                       </span>
                     </div>
                   </td>
                   <td className="p-2">
-                    {approval.status === "Pending" && (
+                    {approval.status === "pending" && (
                       <div className="flex gap-2">
                         <button
-                          onClick={() => handleApprove(approval.id)}
+                          onClick={() => handleApprove(approval._id)}
                           className="px-3 py-1 bg-white border-2 border-green-600 text-green-600 rounded hover:bg-green-50 text-sm font-medium flex items-center gap-1"
                         >
                           <CheckCircle size={14} />
                           Approve
                         </button>
                         <button
-                          onClick={() => handleReject(approval.id)}
+                          onClick={() => handleReject(approval._id)}
                           className="px-3 py-1 bg-white border-2 border-red-600 text-red-600 rounded hover:bg-red-50 text-sm font-medium flex items-center gap-1"
                         >
                           <XCircle size={14} />

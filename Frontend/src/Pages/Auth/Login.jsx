@@ -4,12 +4,12 @@ import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff, DollarSign } from "lucide-react";
 import axios from "axios";
 import { setCredentials } from "../../redux/authSlice";
-import {BASE_URL} from "../../config/urlconfig";
+import { BASE_URL } from "../../config/urlconfig";
 
 const Login = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -54,10 +54,12 @@ const Login = () => {
       });
 
       // Dispatch credentials to Redux store
-      dispatch(setCredentials({
-        user: response.data.user,
-        token: response.data.token,
-      }));
+      dispatch(
+        setCredentials({
+          user: response.data.user,
+          token: response.data.token,
+        })
+      );
 
       // Navigate based on user role
       const role = response.data.user.role;
@@ -68,12 +70,11 @@ const Login = () => {
       } else {
         navigate("/employee/dashboard");
       }
-      
     } catch (error) {
       if (error.response) {
         const status = error.response.status;
         const message = error.response.data.message;
-        
+
         if (status === 404) {
           setErrors({ email: "User not found" });
         } else if (status === 401) {
@@ -82,12 +83,12 @@ const Login = () => {
           setErrors({ general: message || "Login failed" });
         }
       } else if (error.request) {
-        setErrors({ 
-          general: "Network error. Please check your connection." 
+        setErrors({
+          general: "Network error. Please check your connection.",
         });
       } else {
-        setErrors({ 
-          general: "An unexpected error occurred. Please try again." 
+        setErrors({
+          general: "An unexpected error occurred. Please try again.",
         });
       }
       console.error("Login error:", error);
@@ -97,7 +98,13 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-100 via-pink-50 to-blue-100 flex items-center justify-end p-4 bg-cover bg-center" style={{ backgroundImage: 'url(https://d1ss4nmhr4m5he.cloudfront.net/wp-content/uploads/sites/3/2024/10/27141427/What-are-Business-Expenses.jpg)' }}>
+    <div
+      className="min-h-screen bg-gradient-to-br from-purple-100 via-pink-50 to-blue-100 flex items-center justify-end p-4 bg-cover bg-center"
+      style={{
+        backgroundImage:
+          "url(https://d1ss4nmhr4m5he.cloudfront.net/wp-content/uploads/sites/3/2024/10/27141427/What-are-Business-Expenses.jpg)",
+      }}
+    >
       <div className="w-full max-w-sm mr-8 md:mr-16 lg:mr-24">
         <div className="border-4 border-black rounded-3xl p-8 bg-black">
           <div className="text-center mb-8">
@@ -193,7 +200,7 @@ const Login = () => {
             </p>
             <div className="relative">
               <a
-                href="/forgot-password"
+                href="/forgotpassword"
                 className="text-white text-sm hover:text-gray-300 transition inline-block"
               >
                 Forgot password?

@@ -8,10 +8,8 @@ import {
 
 const router = express.Router();
 
-router.use(authMiddleware);
-
-router.get("/", getCategories);
-router.post("/", createCategory);
-router.patch("/:id", updateCategory);
+router.get("/getcategory", authMiddleware, getCategories);
+router.post("/create", authMiddleware, createCategory);
+router.put("/update/:id", authMiddleware, updateCategory);
 
 export default router;

@@ -6,6 +6,6 @@ const router = express.Router();
 
 router.use(authMiddleware);
 
-router.post("/", createAuditLog);
+router.post("/createaudit", createAuditLog);
 
 export default router;

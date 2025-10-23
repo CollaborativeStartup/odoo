@@ -321,7 +321,7 @@ const SignUp = () => {
           "url(https://d1ss4nmhr4m5he.cloudfront.net/wp-content/uploads/sites/3/2024/10/27141427/What-are-Business-Expenses.jpg)",
       }}
     >
-       <div className="w-full max-w-[500px] mr-8 md:mr-16 lg:mr-24">
+      <div className="w-full max-w-[500px] mr-8 md:mr-16 lg:mr-24">
         <div className="border-4 border-black rounded-3xl p-6 bg-black">
           <div className="text-center mb-8">
             <div className="flex items-center justify-center gap-2 mb-1">
