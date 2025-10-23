@@ -1,60 +1,35 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Upload, Plus } from "lucide-react";
+import {
+  getEmployeeExpenses,
+  createExpense,
+  updateExpenseStatus,
+} from "../../services/employeeApi";
+import { getCategories } from "../../services/categoryApi";
 
 export default function EmpDashboard() {
-  const [expenses, setExpenses] = useState([
-    {
-      id: 1,
-      employee: "Sarah",
-      description: "Restaurant bill",
-      date: "2025-10-04",
-      category: "Food",
-      paidBy: "Sarah",
-      remarks: "None",
-      amount: 5000,
-      currency: "INR",
-      convertedAmount: 60,
-      companyCurrency: "USD",
-      status: "Draft",
-      approver: "Sarah",
-      approvalStatus: "Approved",
-      approvalTime: "12:04 4th Oct, 2025",
-    },
-    {
-      id: 2,
-      employee: "Sarah",
-      description: "Client meeting",
-      date: "2025-10-03",
-      category: "Food",
-      paidBy: "Sarah",
-      remarks: "Business lunch",
-      amount: 3000,
-      currency: "INR",
-      convertedAmount: 36,
-      companyCurrency: "USD",
-      status: "Waiting approval",
-      approver: "",
-      approvalStatus: "",
-      approvalTime: "",
-    },
-    {
-      id: 3,
-      employee: "Sarah",
-      description: "Office supplies",
-      date: "2025-10-02",
-      category: "Supplies",
-      paidBy: "Sarah",
-      remarks: "Printer paper",
-      amount: 2000,
-      currency: "INR",
-      convertedAmount: 24,
-      companyCurrency: "USD",
-      status: "Approved",
-      approver: "John Manager",
-      approvalStatus: "Approved",
-      approvalTime: "10:30 3rd Oct, 2025",
-    },
-  ]);
+  const [expenses, setExpenses] = useState([]);
+  const [categories, setCategories] = useState([]);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [expenseData, categoryData] = await Promise.all([
+          getEmployeeExpenses(),
+          getCategories(),
+        ]);
+        if (expenseData) {
+          setExpenses(expenseData);
+        }
+        if (categoryData) {
+          setCategories(categoryData);
+        }
+      } catch (error) {
+        console.error("Failed to fetch data", error);
+      }
+    }
+    fetchData();
+  }, []);
 
   const [showNewExpenseModal, setShowNewExpenseModal] = useState(false);
   const [newExpense, setNewExpense] = useState({
@@ -70,45 +45,48 @@ export default function EmpDashboard() {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState(null);
 
-  const addExpense = () => {
+  const addExpense = async () => {
     if (newExpense.description && newExpense.amount && newExpense.category) {
-      const companyCurrency = "USD";
-      const conversionRate = 0.012;
-      setExpenses([
-        ...expenses,
-        {
-          ...newExpense,
-          id: expenses.length + 1,
-          employee: "Current User",
-          status: "Draft",
-          convertedAmount: (
-            parseFloat(newExpense.amount) * conversionRate
-          ).toFixed(2),
-          companyCurrency: companyCurrency,
-          approver: "",
-          approvalStatus: "",
-          approvalTime: "",
-        },
-      ]);
-      setNewExpense({
-        description: "",
-        date: "",
-        category: "",
-        paidBy: "",
-        remarks: "",
-        amount: "",
-        currency: "INR",
-      });
-      setShowNewExpenseModal(false);
+      try {
+        // Transform frontend data to match backend expectations
+        const expenseData = {
+          category: newExpense.category, // This should be the category ObjectId
+          description: newExpense.description,
+          amountOriginal: parseFloat(newExpense.amount),
+          currencyOriginal: newExpense.currency,
+          dateIncurred: newExpense.date,
+          receiptUrl: "", // TODO: Add receipt upload functionality
+        };
+
+        const createdExpense = await createExpense(expenseData);
+        setExpenses([...expenses, createdExpense]);
+        setNewExpense({
+          description: "",
+          date: "",
+          category: "",
+          paidBy: "",
+          remarks: "",
+          amount: "",
+          currency: "INR",
+        });
+        setShowNewExpenseModal(false);
+      } catch (error) {
+        console.error("Failed to create expense", error);
+      }
     }
   };
 
-  const submitExpense = (id) => {
-    setExpenses(
-      expenses.map((exp) =>
-        exp.id === id ? { ...exp, status: "Waiting approval" } : exp
-      )
-    );
+  const submitExpense = async (id) => {
+    try {
+      await updateExpenseStatus(id, { status: "pending" });
+      setExpenses(
+        expenses.map((exp) =>
+          exp.id === id ? { ...exp, status: "pending" } : exp
+        )
+      );
+    } catch (error) {
+      console.error("Failed to update expense status", error);
+    }
   };
 
   const viewExpenseDetails = (expense) => {
@@ -118,18 +96,18 @@ export default function EmpDashboard() {
 
   const getStatusBadge = (status) => {
     const styles = {
-      Draft: "bg-gray-100 text-gray-700 border-gray-300",
-      "Waiting approval": "bg-yellow-100 text-yellow-700 border-yellow-300",
-      Approved: "bg-green-100 text-green-700 border-green-300",
-      Rejected: "bg-red-100 text-red-700 border-red-300",
+      draft: "bg-gray-100 text-gray-700 border-gray-300",
+      pending: "bg-yellow-100 text-yellow-700 border-yellow-300",
+      approved: "bg-green-100 text-green-700 border-green-300",
+      rejected: "bg-red-100 text-red-700 border-red-300",
     };
-    return styles[status] || styles["Draft"];
+    return styles[status] || styles["draft"];
   };
 
   const getTotalByStatus = (status) => {
     return expenses
       .filter((e) => e.status === status)
-      .reduce((sum, e) => sum + parseFloat(e.convertedAmount || 0), 0)
+      .reduce((sum, e) => sum + parseFloat(e.amountConverted || 0), 0)
       .toFixed(2);
   };
 
@@ -162,14 +140,14 @@ export default function EmpDashboard() {
           <div className="flex flex-col items-center">
             <div className="w-24 h-24 rounded-full bg-gray-200 border-2 border-gray-800 flex flex-col items-center justify-center mb-2">
               <span className="text-xl font-bold">
-                {getTotalByStatus("Draft")}
+                {getTotalByStatus("draft")}
               </span>
               <span className="text-xs text-gray-600">USD</span>
             </div>
             <span className="text-sm font-semibold">Draft</span>
             <span className="text-xs text-gray-500">To submit</span>
             <span className="text-xs text-gray-500 mt-1">
-              ({getCountByStatus("Draft")} items)
+              ({getCountByStatus("draft")} items)
             </span>
           </div>
 
@@ -181,13 +159,13 @@ export default function EmpDashboard() {
           <div className="flex flex-col items-center">
             <div className="w-24 h-24 rounded-full bg-yellow-100 border-2 border-yellow-500 flex flex-col items-center justify-center mb-2">
               <span className="text-xl font-bold text-yellow-700">
-                {getTotalByStatus("Waiting approval")}
+                {getTotalByStatus("pending")}
               </span>
               <span className="text-xs text-yellow-600">USD</span>
             </div>
-            <span className="text-sm font-semibold">Waiting approval</span>
+            <span className="text-sm font-semibold">Pending</span>
             <span className="text-xs text-gray-500 mt-1">
-              ({getCountByStatus("Waiting approval")} items)
+              ({getCountByStatus("pending")} items)
             </span>
           </div>
 
@@ -199,13 +177,13 @@ export default function EmpDashboard() {
           <div className="flex flex-col items-center">
             <div className="w-24 h-24 rounded-full bg-green-100 border-2 border-green-500 flex flex-col items-center justify-center mb-2">
               <span className="text-xl font-bold text-green-700">
-                {getTotalByStatus("Approved")}
+                {getTotalByStatus("approved")}
               </span>
               <span className="text-xs text-green-600">USD</span>
             </div>
             <span className="text-sm font-semibold">Approved</span>
             <span className="text-xs text-gray-500 mt-1">
-              ({getCountByStatus("Approved")} items)
+              ({getCountByStatus("approved")} items)
             </span>
           </div>
         </div>
@@ -252,23 +230,33 @@ export default function EmpDashboard() {
             <tbody>
               {expenses.map((expense) => (
                 <tr
-                  key={expense.id}
+                  key={expense.id || expense._id}
                   className="border-b border-gray-300 hover:bg-gray-50 cursor-pointer"
                   onClick={() => viewExpenseDetails(expense)}
                 >
-                  <td className="p-2">{expense.employee}</td>
+                  <td className="p-2">
+                    {expense.employee?.name ||
+                      expense.employee?.email ||
+                      "Unknown"}
+                  </td>
                   <td className="p-2">{expense.description}</td>
                   <td className="p-2">{expense.date}</td>
-                  <td className="p-2">{expense.category}</td>
+                  <td className="p-2">
+                    {categories.find((c) => c._id === expense.category)?.name ||
+                      (typeof expense.category === "object"
+                        ? expense.category.name
+                        : expense.category) ||
+                      "Unknown"}
+                  </td>
                   <td className="p-2">{expense.paidBy}</td>
                   <td className="p-2">{expense.remarks}</td>
                   <td className="p-2">
                     <div className="flex flex-col">
                       <span className="text-sm">
-                        {expense.amount} {expense.currency}
+                        {expense.amountOriginal} {expense.currencyOriginal}
                       </span>
                       <span className="text-xs text-gray-500">
-                        ≈ {expense.convertedAmount} {expense.companyCurrency}
+                        ≈ {expense.amountConverted} USD
                       </span>
                     </div>
                   </td>
@@ -354,10 +342,11 @@ export default function EmpDashboard() {
                     }
                   >
                     <option value="">Select category</option>
-                    <option>Food</option>
-                    <option>Travel</option>
-                    <option>Supplies</option>
-                    <option>Other</option>
+                    {categories.map((category) => (
+                      <option key={category._id} value={category._id}>
+                        {category.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -492,7 +481,8 @@ export default function EmpDashboard() {
                       type="text"
                       className="w-full border-2 border-gray-300 rounded px-3 py-2 bg-gray-50"
                       value={selectedExpense.description}
-                      disabled={selectedExpense.status !== "Draft"}
+                      disabled={selectedExpense.status !== "draft"}
+                      readOnly={selectedExpense.status !== "draft"}
                     />
                   </div>
 
@@ -503,7 +493,7 @@ export default function EmpDashboard() {
                     <select
                       className="w-full border-2 border-gray-300 rounded px-3 py-2 bg-gray-50"
                       value={selectedExpense.category}
-                      disabled={selectedExpense.status !== "Draft"}
+                      disabled={selectedExpense.status !== "draft"}
                     >
                       <option>Food</option>
                       <option>Travel</option>
@@ -520,13 +510,14 @@ export default function EmpDashboard() {
                       <input
                         type="number"
                         className="flex-1 border-2 border-gray-300 rounded px-3 py-2 bg-gray-50"
-                        value={selectedExpense.amount}
-                        disabled={selectedExpense.status !== "Draft"}
+                        value={selectedExpense.amountOriginal}
+                        disabled={selectedExpense.status !== "draft"}
+                        readOnly={selectedExpense.status !== "draft"}
                       />
                       <select
                         className="border-2 border-gray-300 rounded px-3 py-2 bg-gray-50"
-                        value={selectedExpense.currency}
-                        disabled={selectedExpense.status !== "Draft"}
+                        value={selectedExpense.currencyOriginal}
+                        disabled={selectedExpense.status !== "draft"}
                       >
                         <option>INR</option>
                         <option>USD</option>
@@ -544,7 +535,8 @@ export default function EmpDashboard() {
                       value={
                         selectedExpense.remarks || selectedExpense.description
                       }
-                      disabled={selectedExpense.status !== "Draft"}
+                      disabled={selectedExpense.status !== "draft"}
+                      readOnly={selectedExpense.status !== "draft"}
                     />
                   </div>
                 </div>
@@ -559,7 +551,8 @@ export default function EmpDashboard() {
                       type="date"
                       className="w-full border-2 border-gray-300 rounded px-3 py-2 bg-gray-50"
                       value={selectedExpense.date}
-                      disabled={selectedExpense.status !== "Draft"}
+                      disabled={selectedExpense.status !== "draft"}
+                      readOnly={selectedExpense.status !== "draft"}
                     />
                   </div>
 
@@ -570,7 +563,7 @@ export default function EmpDashboard() {
                     <select
                       className="w-full border-2 border-gray-300 rounded px-3 py-2 bg-gray-50"
                       value={selectedExpense.paidBy}
-                      disabled={selectedExpense.status !== "Draft"}
+                      disabled={selectedExpense.status !== "draft"}
                     >
                       <option>Self</option>
                       <option>Company</option>
@@ -584,7 +577,8 @@ export default function EmpDashboard() {
                     <textarea
                       className="w-full border-2 border-gray-300 rounded px-3 py-2 bg-gray-50 h-24"
                       value={selectedExpense.remarks}
-                      disabled={selectedExpense.status !== "Draft"}
+                      disabled={selectedExpense.status !== "draft"}
+                      readOnly={selectedExpense.status !== "draft"}
                     />
                   </div>
                 </div>
@@ -604,8 +598,8 @@ export default function EmpDashboard() {
               </div>
 
               {/* Approval Log */}
-              {(selectedExpense.status === "Approved" ||
-                selectedExpense.status === "Rejected") &&
+              {(selectedExpense.status === "approved" ||
+                selectedExpense.status === "rejected") &&
                 selectedExpense.approver && (
                   <div className="mt-6 bg-white border-2 border-gray-800 rounded-lg p-4">
                     <h3 className="font-semibold text-gray-800 mb-4">
@@ -632,7 +626,7 @@ export default function EmpDashboard() {
                             <td className="p-3">
                               <span
                                 className={`font-semibold ${
-                                  selectedExpense.status === "Approved"
+                                  selectedExpense.status === "approved"
                                     ? "text-green-600"
                                     : "text-red-600"
                                 }`}
@@ -650,7 +644,7 @@ export default function EmpDashboard() {
                   </div>
                 )}
 
-              {selectedExpense.status !== "Draft" && (
+              {selectedExpense.status !== "draft" && (
                 <div className="mt-4 text-xs text-gray-500 italic bg-blue-50 border border-blue-200 rounded p-3">
                   Once submitted the record should become readonly for employee
                   and the submit button should be invisible and status should be
@@ -667,7 +661,7 @@ export default function EmpDashboard() {
               >
                 Close
               </button>
-              {selectedExpense.status === "Draft" && (
+              {selectedExpense.status === "draft" && (
                 <button
                   onClick={() => {
                     submitExpense(selectedExpense.id);
