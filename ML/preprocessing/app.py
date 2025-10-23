@@ -14,7 +14,7 @@ from flask_cors import CORS
 import pandas as pd
 from PIL import Image
 import io
-from report_generator import ReportGenerator
+from odoo.ML.preprocessing.report_generator import ReportGenerator
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
