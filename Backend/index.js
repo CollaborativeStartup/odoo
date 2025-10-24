@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 import cors from "cors";
 import { fileURLToPath } from "url";
 import path from "path";
-import connectDB from "./db/db.js";
+import connectDB from "../db/db.js";
 dotenv.config();
 
 import authRoutes from "./routes/authRoutes.js";
