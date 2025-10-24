@@ -1,6 +1,7 @@
 import axios from "axios";
+import { BASE_URL } from "../config/urlconfig";
 
-const API_BASE_URL = "http://localhost:5000/expenses";
+const API_BASE_URL = `${BASE_URL}/expenses`;
 
 const managerApi = axios.create({
   baseURL: API_BASE_URL,
